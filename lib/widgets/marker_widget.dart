@@ -41,12 +41,13 @@ class MarkerState extends State<Marker> {
 
   @override
   Widget build(BuildContext context) {
+    var size = 60.0;
     return ValueListenableBuilder(
       valueListenable: widget.screenPosition,
       builder: (context, pos, child) {
         return Positioned(
-          left: pos.x,
-          top: pos.y,
+          left: pos.x - size/2,
+          top: pos.y - size,
           child: GestureDetector(
             onTap: () {},
             child: widget.child,

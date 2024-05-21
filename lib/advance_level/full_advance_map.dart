@@ -4,6 +4,7 @@ import 'package:mapboxintegration/const/colors.dart';
 import 'package:mapboxintegration/repository/latlang.dart';
 import 'package:mapboxintegration/utils/utils.dart';
 import 'package:mapboxintegration/widgets/drawing_lines_widget.dart';
+import 'package:mapboxintegration/widgets/line_widget.dart';
 import '../const/strings.dart';
 import '../repository/questions_repo.dart';
 import '../widgets/bottom_nav_widget.dart';
@@ -24,18 +25,16 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
   var markerPosition = <Position>[];
   var highlightAreaPosition = <Position>[];
   List<Marker> markers = [];
-  List<Path> drawingPoints = [];
+  List<Lines> linesDrawn =[];
 
   double bottomHeight = 50.0;
   int? bottomIconSelectedIndex;
   int gifSelectedIndex = 0;
   String selectedGif = gifImagesList[0];
   bool gestures = true;
-
   Color selectedColor = Colors.yellow;
-  double strokeWidth = 10;
 
-
+  LatLng? linesCoordinates;
 
 
   /* Methods for MapWidget */
@@ -43,24 +42,15 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
   _onMapCreated(MapboxMap mapboxMap) async {
     this.mapboxMap = mapboxMap;
     //Initial Position is Lahore pakistan
-
     questionsRepo.showMap(mapboxMap, 74.36263544955527, 31.524269220159677);
   }
   _onCameraChangeListener(CameraChangedEventData cameraChangedEventData){
-    if(drawingPoints.isNotEmpty){
-      gestures = false;
-      refreshMapTouchEvents();
-      setState(() {});
-    }
-    updateMarkersPosition();
+    updateGifMarkersAndLinesPosition(markers);
+    updateGifMarkersAndLinesPosition(linesDrawn);
   }
   _onScrollListener(ScreenCoordinate sc){
-    if(drawingPoints.isNotEmpty){
-      gestures = false;
-      refreshMapTouchEvents();
-      setState(() {});
-    }
-    updateMarkersPosition();
+    updateGifMarkersAndLinesPosition(markers);
+    updateGifMarkersAndLinesPosition(linesDrawn);
   }
   _onTapListener(ScreenCoordinate coordinates){
     if(bottomIconSelectedIndex == 1){
@@ -76,7 +66,10 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
       questionsRepo.addInteractiveMarkersMap(mapboxMap, markerPosition);
     }
     if(bottomIconSelectedIndex == 4){
-      print(coordinates);
+      setState(() {
+        linesCoordinates = LatLng(lat: coordinates.y, lng: coordinates.x);
+      });
+      print('lat: ${linesCoordinates?.lat} lng : ${linesCoordinates?.lng}');
     }
   }
 
@@ -104,18 +97,14 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
             ),
 
             // UI for drawn Lines
-            CustomPaint(
-              painter: DrawingPainter(drawingPoints, selectedColor, strokeWidth),
-            ),
+            DrawLines(lines: linesDrawn.toList()),
 
             //UI for GIF Markers
-            MapMarkers(
-              markers: markers.toList(),
-            ),
+            MapMarkers(markers: markers.toList()),
 
             // Custom Painter to draw lines if line option is selected
-            if(bottomIconSelectedIndex == 4)
-              DrawingLines(drawingPoints: drawingPoints, strokeWidth: strokeWidth, selectedColor: selectedColor,)
+            if(bottomIconSelectedIndex == 4 && linesCoordinates != null)
+              DrawingLines(lineCoordinates: linesCoordinates!, linesDrawn:linesDrawn, mapboxMap:mapboxMap!, selectedColor: selectedColor,)
           ],
         ),
 
@@ -146,7 +135,6 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
 
     );
   }
-
 
 
   // Highlighted Area Methods
@@ -185,15 +173,14 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
 
     // Add the new marker to list
     markers.add(marker);
-
     // Trigger ui refresh
     setState(() {});
   }
 
-  Future<void> updateMarkersPosition() async {
+  Future<void> updateGifMarkersAndLinesPosition(markerOrLines) async {
     // We check if any marker is present
-    if (markers.isNotEmpty) {
-      for (var m in markers) {
+    if (markerOrLines.isNotEmpty) {
+      for (var m in markerOrLines) {
         /* For ever marker previously added
           we ask the mapboxmap to give the screenCoordinate corresponding to the geo coordinate
          */
@@ -206,7 +193,6 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
       }
     }
   }
-
 
 
   /* Bottom Icon Section */
@@ -296,12 +282,6 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
 
   /*onTap methods Implementation */
   //clear All on Tap for Bottom Icons
-  clearAllInteractions(){
-    setState(() {
-
-
-    });
-  }
 
   //Add Highlight Area on Tap for Bottom Icons
   highlightAreaIconTap(index){
@@ -355,10 +335,13 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
         bottomHeight = 50;
         gestures = true;
         refreshMapTouchEvents();
+        linesCoordinates = null;
       } else {
+        linesCoordinates = null;
         bottomIconSelectedIndex = index;
         bottomHeight = 50;
         gestures = false;
+
         refreshMapTouchEvents();
         if(bottomHeight == 50){
           bottomHeight = bottomHeight*2;
@@ -391,9 +374,10 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
   }
 
   undoLines(){
-    if(drawingPoints.isNotEmpty){
+    if(linesDrawn.isNotEmpty){
       setState(() {
-        drawingPoints.removeLast();
+        linesDrawn.removeLast();
+        // drawing.removeLast();
       });
     }
   }

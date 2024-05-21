@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as screen;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as map;
+import 'package:mapboxintegration/repository/latlang.dart';
+
+import 'line_widget.dart';
 
 class DrawingLines extends StatefulWidget {
-  final List<Path> drawingPoints;
-  final double strokeWidth;
-  final  Color selectedColor;
-  const DrawingLines({super.key, required this.drawingPoints, required this.strokeWidth, required this.selectedColor, });
+  final LatLng lineCoordinates;
+  final List<Lines> linesDrawn;
+  final map.MapboxMap mapboxMap;
+  final Color selectedColor;
+  const DrawingLines({super.key, required this.lineCoordinates, required this.linesDrawn, required this.mapboxMap, required this.selectedColor,});
 
   @override
   State<DrawingLines> createState() => _DrawingLinesState();
@@ -13,18 +17,17 @@ class DrawingLines extends StatefulWidget {
 
 class _DrawingLinesState extends State<DrawingLines> {
   double strokeWidth = 5;
-  // List<DrawingPoint> drawingPoints = [];
-  // final strokes = <Path>[];
+  List<Path> drawingPoints = [];
   Offset? lineStartPosition;
   Offset? lineEndPosition;
   // final ValueNotifier<screen.ScreenCoordinate> screenPosition;
 
   void startStroke(double x, double y){
-    widget.drawingPoints.add(Path()..moveTo(x, y));
+    drawingPoints.add(Path()..moveTo(x, y));
   }
   void moveStroke(double x, double y){
     setState(() {
-      widget.drawingPoints.last.lineTo(x, y);
+      drawingPoints.last.lineTo(x, y);
     });
   }
 
@@ -42,9 +45,13 @@ class _DrawingLinesState extends State<DrawingLines> {
           onPanEnd: (pos){
             lineEndPosition = pos.globalPosition;
             print('End At : $lineEndPosition');
+
+            addCustomLines(widget.lineCoordinates.lat, widget.lineCoordinates.lng, drawingPoints, strokeWidth, widget.selectedColor);
+
           },
+
           child: CustomPaint(
-            painter: DrawingPainter(widget.drawingPoints, widget.selectedColor, strokeWidth),
+            painter: DrawingPainter(drawingPoints, widget.selectedColor, strokeWidth),
             child: SizedBox(
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
@@ -65,7 +72,7 @@ class _DrawingLinesState extends State<DrawingLines> {
               ElevatedButton.icon(
                 onPressed: () {
                   setState(() {
-                    widget.drawingPoints.clear();
+                    drawingPoints.clear();
                   });
                 },
                 icon: const Icon(Icons.clear),
@@ -77,15 +84,40 @@ class _DrawingLinesState extends State<DrawingLines> {
       ],
     );
   }
+
+  Future<void> addCustomLines(lat,lng,drawingPoints, strokeWidth, selectedColor) async {
+    // We ask the mapboxMap to give the screen coordinate based on our  location  of type LatLng
+    final screenCoordinate = await widget.mapboxMap.pixelForCoordinate(
+        map.Point(coordinates: map.Position(lat, lng))
+            .toJson());
+
+    // We create the Lines widget with the required data
+
+    var lines = Lines(
+      position: screenCoordinate,
+      geoCoordinate: LatLng(lat: lat, lng: lng),
+      drawingPath: drawingPoints,
+      strokeWidth: strokeWidth,
+      selectedColor: selectedColor,
+      child: CustomPaint(
+        painter: DrawingPainter(drawingPoints, selectedColor, strokeWidth),
+      ),
+    );
+
+    // Add the new Line to list
+    widget.linesDrawn.add(lines);
+
+    // Trigger ui refresh
+    setState(() {});
+  }
+
 }
 
 class DrawingPainter extends CustomPainter {
   final List<Path> drawingPoints;
-  // final List<DrawingPoint> drawingPoints;
-
   final Color color;
   final double strokeWidth;
-  DrawingPainter(this.drawingPoints, this.color, this.strokeWidth);
+  DrawingPainter(this.drawingPoints, this.color, this.strokeWidth,);
 
   @override
   void paint(Canvas canvas, Size size) {
