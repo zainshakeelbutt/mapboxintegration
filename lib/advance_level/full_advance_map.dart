@@ -130,14 +130,10 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
 
             // Undo tap UI
             undoTap: (){
-              if(bottomIconSelectedIndex == 1){
-                undoHighlightArea();
-              }
 
               if(bottomIconSelectedIndex == 2){
                 undoGifMarkers();
               }
-
               if(bottomIconSelectedIndex == 4){
                 undoLines();
               }
@@ -385,15 +381,6 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
   }
 
   //Undo Section onTap methods Implementation
-  undoHighlightArea(){
-    if(highlightAreaPosition.isNotEmpty){
-      setState(() {
-        highlightAreaPosition.removeLast();
-        questionsRepo.addHighlightAreaOnMap(mapboxMap, highlightAreaPosition);
-
-      });
-    }
-  }
 
   undoGifMarkers(){
     if(markers.isNotEmpty){
