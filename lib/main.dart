@@ -5,7 +5,7 @@ import 'package:mapboxintegration/home_screen.dart';
 void main() {
 
   WidgetsFlutterBinding.ensureInitialized();
-  MapboxOptions.setAccessToken("pk.eyJ1IjoiemFpbnNoYWtlZWwzMDAiLCJhIjoiY2x3N2tsZHl1MXhnMTJqcGhheW04bWhsOCJ9.rN_sPdOVkt8xoPp_AzwZcA");
+  MapboxOptions.setAccessToken("pk.eyJ1IjoiemFpbnNoYWtlZWwzMDAiLCJhIjoiY2x3YnloNWttMHJhZzJqcGFweHZnMnFuaSJ9.fFMHiFZ-kICjO1l7cy5GuQ");
 
   runApp(const MyApp());
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(

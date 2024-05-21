@@ -43,7 +43,6 @@ class QuestionsRepo {
       pointAnnotationManager = value;
       final ByteData bytes = await rootBundle.load('assets/symbols/custom-icon.png');
       final Uint8List list = bytes.buffer.asUint8List();
-      var gImage = Image.asset('assets/symbols/anim_marker.gif');
       addStaticMarker(list);
       pointAnnotationManager?.addOnPointAnnotationClickListener(AnnotationClickListener());
     });
@@ -73,6 +72,10 @@ class QuestionsRepo {
 
     });
 
+  }
+
+  deleteAllMarkers(){
+    pointAnnotationManager?.deleteAll();
   }
 
 

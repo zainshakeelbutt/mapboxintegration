@@ -52,9 +52,9 @@ class FullBasicMapState extends State<FullBasicMap> {
           styleUri: MapboxStyles.SATELLITE_STREETS,
           textureView: true,
           onMapCreated: _onMapCreated,
-          onTapListener: (coordinates){
-            print('lat : ${coordinates.x} long : ${coordinates.y}');
-          },
+          // onTapListener: (coordinates){
+          //   print('lat : ${coordinates.x} long : ${coordinates.y}');
+          // },
         ));
   }
 }
