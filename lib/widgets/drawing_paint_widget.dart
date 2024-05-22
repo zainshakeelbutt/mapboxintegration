@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as map;
 import 'package:mapboxintegration/repository/latlang.dart';
 
-import 'line_widget.dart';
+import 'drawing_widget.dart';
 
 class DrawingPaths extends StatefulWidget {
   final LatLng lineCoordinates;

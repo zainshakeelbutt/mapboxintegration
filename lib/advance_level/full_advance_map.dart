@@ -4,7 +4,7 @@ import 'package:mapboxintegration/const/colors.dart';
 import 'package:mapboxintegration/repository/latlang.dart';
 import 'package:mapboxintegration/utils/utils.dart';
 import 'package:mapboxintegration/widgets/drawing_paint_widget.dart';
-import 'package:mapboxintegration/widgets/line_widget.dart';
+import 'package:mapboxintegration/widgets/drawing_widget.dart';
 import '../const/strings.dart';
 import '../repository/questions_repo.dart';
 import '../widgets/bottom_nav_widget.dart';
