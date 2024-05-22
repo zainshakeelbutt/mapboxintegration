@@ -23,7 +23,7 @@ Widget bottomNavWidget({
               ),
             ),
           ),
-        if(bottomHeight == 100 && bottomIconSelectedIndex ==4)
+        if(bottomHeight == 100 && (bottomIconSelectedIndex == 1 || bottomIconSelectedIndex ==4))
           Expanded(
             child: Container(
               color: Colors.grey,
@@ -37,7 +37,7 @@ Widget bottomNavWidget({
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              if(bottomIconSelectedIndex != 0 && bottomIconSelectedIndex != 1 && bottomIconSelectedIndex != 3 && bottomIconSelectedIndex != null)
+              if(bottomIconSelectedIndex != 0 && bottomIconSelectedIndex != 3 && bottomIconSelectedIndex != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: GestureDetector(

@@ -3,7 +3,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:mapboxintegration/const/colors.dart';
 import 'package:mapboxintegration/repository/latlang.dart';
 import 'package:mapboxintegration/utils/utils.dart';
-import 'package:mapboxintegration/widgets/drawing_lines_widget.dart';
+import 'package:mapboxintegration/widgets/drawing_paint_widget.dart';
 import 'package:mapboxintegration/widgets/line_widget.dart';
 import '../const/strings.dart';
 import '../repository/questions_repo.dart';
@@ -19,13 +19,12 @@ class FullAdvanceMap extends StatefulWidget {
 
 class FullAdvanceMapState extends State<FullAdvanceMap> {
   MapboxMap? mapboxMap;
-  Utils utils = Utils();
   QuestionsRepo questionsRepo = QuestionsRepo();
 
   var markerPosition = <Position>[];
-  var highlightAreaPosition = <Position>[];
   List<Marker> markers = [];
-  List<Lines> linesDrawn =[];
+  List<Drawing> linesDrawn =[];
+  List<Drawing> highlightAreasDrawn =[];
 
   double bottomHeight = 50.0;
   int? bottomIconSelectedIndex;
@@ -45,27 +44,30 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
     questionsRepo.showMap(mapboxMap, 74.36263544955527, 31.524269220159677);
   }
   _onCameraChangeListener(CameraChangedEventData cameraChangedEventData){
-    updateGifMarkersAndLinesPosition(markers);
-    updateGifMarkersAndLinesPosition(linesDrawn);
+    updateGifMarkersOrLinesOrHighlightedAreaPosition(markers);
+    updateGifMarkersOrLinesOrHighlightedAreaPosition(linesDrawn);
+    updateGifMarkersOrLinesOrHighlightedAreaPosition(highlightAreasDrawn);
   }
   _onScrollListener(ScreenCoordinate sc){
-    updateGifMarkersAndLinesPosition(markers);
-    updateGifMarkersAndLinesPosition(linesDrawn);
+    updateGifMarkersOrLinesOrHighlightedAreaPosition(markers);
+    updateGifMarkersOrLinesOrHighlightedAreaPosition(linesDrawn);
+    updateGifMarkersOrLinesOrHighlightedAreaPosition(highlightAreasDrawn);
   }
   _onTapListener(ScreenCoordinate coordinates){
-    if(bottomIconSelectedIndex == 1){
-      _addHighlightedArea(Position(coordinates.y, coordinates.x));
-    }
+
+    // when gif marker option selected
     if(bottomIconSelectedIndex == 2){
       addGifMarker(coordinates.y, coordinates.x,selectedGif);
     }
+    // when Static marker option selected
     if(bottomIconSelectedIndex == 3){
       setState(() {
         markerPosition.add(Position(coordinates.y, coordinates.x));
       });
       questionsRepo.addInteractiveMarkersMap(mapboxMap, markerPosition);
     }
-    if(bottomIconSelectedIndex == 4){
+    //When Highlighted Area or Line drawing option Selected
+    if(bottomIconSelectedIndex == 1 || bottomIconSelectedIndex == 4){
       setState(() {
         linesCoordinates = LatLng(lat: coordinates.y, lng: coordinates.x);
       });
@@ -96,15 +98,22 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
               onTapListener: _onTapListener,
             ),
 
+            // UI for Highlighted Areas
+            DrawPaths(lines: highlightAreasDrawn.toList()),
+
             // UI for drawn Lines
-            DrawLines(lines: linesDrawn.toList()),
+            DrawPaths(lines: linesDrawn.toList()),
 
             //UI for GIF Markers
             MapMarkers(markers: markers.toList()),
 
             // Custom Painter to draw lines if line option is selected
+            if(bottomIconSelectedIndex == 1 && linesCoordinates != null)
+              DrawingPaths(lineCoordinates: linesCoordinates!, pathDrawn:highlightAreasDrawn, mapboxMap:mapboxMap!, selectedColor: selectedColor.withOpacity(0.5), paintingStyle: PaintingStyle.fill),
+
+            // Custom Painter to draw lines if line option is selected
             if(bottomIconSelectedIndex == 4 && linesCoordinates != null)
-              DrawingLines(lineCoordinates: linesCoordinates!, linesDrawn:linesDrawn, mapboxMap:mapboxMap!, selectedColor: selectedColor,)
+              DrawingPaths(lineCoordinates: linesCoordinates!, pathDrawn:linesDrawn, mapboxMap:mapboxMap!, selectedColor: selectedColor, paintingStyle: PaintingStyle.stroke)
           ],
         ),
 
@@ -120,6 +129,9 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
             // Undo tap UI
             undoTap: (){
 
+              if(bottomIconSelectedIndex == 1){
+                undoHighlightedArea();
+              }
               if(bottomIconSelectedIndex == 2){
                 undoGifMarkers();
               }
@@ -136,23 +148,9 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
     );
   }
 
-
-  // Highlighted Area Methods
-
-  void _addHighlightedArea(coordinates){
-    setState(() {
-      highlightAreaPosition.add(coordinates);
-      // _addHighlightedArea(0,highlightedAreaPositions);
-      questionsRepo.addHighlightAreaOnMap(mapboxMap, highlightAreaPosition);
-    });
-
-    // print(highlightedAreaPositions);
-
-  }
-
-
   // Custom Markers Methods
 
+  //Method to Add Gif Marker on Map
   Future<void> addGifMarker(lat,lng,image) async {
     var iconSize = 60.0;
 
@@ -177,7 +175,9 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
     setState(() {});
   }
 
-  Future<void> updateGifMarkersAndLinesPosition(markerOrLines) async {
+  /* Single method to update position of Gif Markers, Lines And Highlighted Area
+  according to Map position by just changing the parameter */
+  Future<void> updateGifMarkersOrLinesOrHighlightedAreaPosition(markerOrLines) async {
     // We check if any marker is present
     if (markerOrLines.isNotEmpty) {
       for (var m in markerOrLines) {
@@ -246,7 +246,7 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
         }
 
         else if(index == 1){
-          highlightAreaIconTap(index);
+          drawLinesOrHighlightedAreaIconTap(index);
         }
 
         else if(index == 2){
@@ -258,7 +258,7 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
         }
 
         else if(index == 4){
-          drawLinesIconTap(index);
+          drawLinesOrHighlightedAreaIconTap(index);
         }
 
         else {
@@ -281,22 +281,8 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
   }
 
   /*onTap methods Implementation */
-  //clear All on Tap for Bottom Icons
 
-  //Add Highlight Area on Tap for Bottom Icons
-  highlightAreaIconTap(index){
-    setState(() {
-      if(bottomIconSelectedIndex == index){
-        bottomIconSelectedIndex = null;
-        bottomHeight = 50;
-      } else {
-        bottomIconSelectedIndex = index;
-        bottomHeight = 50;
-        gestures = true;
-      }
-    });
-  }
-
+  //onTap method for Gif marker
   gifIconTap(index){
     setState(() {
       if(bottomIconSelectedIndex == index){
@@ -315,6 +301,7 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
     });
   }
 
+  //onTap method for static marker
   staticMarkerIconTap(index){
     setState(() {
       if(bottomIconSelectedIndex == index){
@@ -328,7 +315,8 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
     });
   }
 
-  drawLinesIconTap(index){
+  //onTap method for drawing highlighted area or drawing lines on map
+  drawLinesOrHighlightedAreaIconTap(index){
     setState(() {
       if(bottomIconSelectedIndex == index){
         bottomIconSelectedIndex = null;
@@ -352,6 +340,8 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
       }
     });
   }
+
+  //onTap method to make map on a static position and make it do not move
   refreshMapTouchEvents(){
     setState(() {
       mapboxMap!.gestures.updateSettings(GesturesSettings(rotateEnabled: gestures));
@@ -377,7 +367,14 @@ class FullAdvanceMapState extends State<FullAdvanceMap> {
     if(linesDrawn.isNotEmpty){
       setState(() {
         linesDrawn.removeLast();
-        // drawing.removeLast();
+      });
+    }
+  }
+
+  undoHighlightedArea(){
+    if(highlightAreasDrawn.isNotEmpty){
+      setState(() {
+        highlightAreasDrawn.removeLast();
       });
     }
   }

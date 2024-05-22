@@ -3,7 +3,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../repository/latlang.dart';
 
-class Lines extends StatefulWidget {
+class Drawing extends StatefulWidget {
   // The widget position on the UI
   final ValueNotifier<ScreenCoordinate> screenPosition;
 
@@ -15,7 +15,7 @@ class Lines extends StatefulWidget {
   final  Color selectedColor;
 
   final Widget child;
-  Lines({
+  Drawing({
     super.key,
     required ScreenCoordinate position,
     required this.geoCoordinate,
@@ -24,11 +24,11 @@ class Lines extends StatefulWidget {
   }) : screenPosition = ValueNotifier(position);
 
   @override
-  LinesState createState() => LinesState();
+  DrawingState createState() => DrawingState();
 }
 
-class LinesState extends State<Lines> {
-  LinesState();
+class DrawingState extends State<Drawing> {
+  DrawingState();
 
   @override
   void initState() {
@@ -59,9 +59,9 @@ class LinesState extends State<Lines> {
   }
 }
 
-class DrawLines extends StatelessWidget {
-  final List<Lines> lines;
-  const DrawLines({super.key, required this.lines});
+class DrawPaths extends StatelessWidget {
+  final List<Drawing> lines;
+  const DrawPaths({super.key, required this.lines});
 
   @override
   Widget build(BuildContext context) {

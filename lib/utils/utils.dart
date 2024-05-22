@@ -46,4 +46,5 @@ class AnnotationClickListener extends OnPointAnnotationClickListener {
   void onPointAnnotationClick(PointAnnotation annotation) {
     print("onAnnotationClick, id: ${annotation.geometry!['coordinates']}");
   }
+
 }
